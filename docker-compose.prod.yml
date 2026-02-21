@@ -1,0 +1,65 @@
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+      target: migrate
+    container_name: kan-migrate
+    networks:
+      - kan-network
+    environment:
+      - POSTGRES_URL=${POSTGRES_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+      target: web
+    container_name: kan-web
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - kan-network
+    environment:
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - POSTGRES_URL=${POSTGRES_URL}
+      - NEXT_PUBLIC_ALLOW_CREDENTIALS=${NEXT_PUBLIC_ALLOW_CREDENTIALS}
+      - NEXT_PUBLIC_DISABLE_EMAIL=${NEXT_PUBLIC_DISABLE_EMAIL}
+      - NEXT_PUBLIC_DISABLE_SIGN_UP=${NEXT_PUBLIC_DISABLE_SIGN_UP}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - BETTER_AUTH_TRUSTED_ORIGINS=${BETTER_AUTH_TRUSTED_ORIGINS}
+      - BETTER_AUTH_ALLOWED_DOMAINS=${BETTER_AUTH_ALLOWED_DOMAINS}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    container_name: kan-db
+    environment:
+      - POSTGRES_DB=kan_db
+      - POSTGRES_USER=kan
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - kan_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kan -d kan_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - kan-network
+
+networks:
+  kan-network:
+
+volumes:
+  kan_postgres_data:

@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import * as cardRepo from "@kan/db/repository/card.repo";
@@ -6,7 +7,9 @@ import * as cardActivityRepo from "@kan/db/repository/cardActivity.repo";
 import * as cardCommentRepo from "@kan/db/repository/cardComment.repo";
 import * as labelRepo from "@kan/db/repository/label.repo";
 import * as listRepo from "@kan/db/repository/list.repo";
+import * as permissionRepo from "@kan/db/repository/permission.repo";
 import * as workspaceRepo from "@kan/db/repository/workspace.repo";
+import { cardToWorkspaceMembers } from "@kan/db/schema";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { mergeActivities } from "../utils/activities";
@@ -896,6 +899,34 @@ export const cardRouter = createTRPCRouter({
           message: `Card with public ID ${input.cardPublicId} not found`,
           code: "NOT_FOUND",
         });
+      }
+
+      // Restrict card movement to assigned members and admins
+      if (newListId && newListId !== existingCard.listId) {
+        const assignedMembers = await ctx.db
+          .select({ workspaceMemberId: cardToWorkspaceMembers.workspaceMemberId })
+          .from(cardToWorkspaceMembers)
+          .where(eq(cardToWorkspaceMembers.cardId, existingCard.id));
+
+        if (assignedMembers.length > 0) {
+          const member = await permissionRepo.getMemberWithRole(
+            ctx.db,
+            userId,
+            card.workspaceId,
+          );
+
+          const isAdmin = member?.role === "admin";
+          const isAssigned = member && assignedMembers.some(
+            (am) => am.workspaceMemberId === member.id,
+          );
+
+          if (!isAdmin && !isAssigned) {
+            throw new TRPCError({
+              message: "Only assigned members and admins can move this card",
+              code: "FORBIDDEN",
+            });
+          }
+        }
       }
 
       let result:

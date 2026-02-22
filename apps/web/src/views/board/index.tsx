@@ -14,6 +14,7 @@ import {
 } from "react-icons/hi2";
 
 import type { UpdateBoardInput } from "@kan/api/types";
+import { authClient } from "@kan/auth/client";
 
 import Button from "~/components/Button";
 import { DeleteLabelConfirmation } from "~/components/DeleteLabelConfirmation";
@@ -64,8 +65,17 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     direction: "horizontal",
   });
 
-  const { canCreateList, canEditList, canEditCard, canEditBoard } =
+  const { canCreateList, canEditList, canEditCard, canEditBoard, role } =
     usePermissions();
+  const { data: session } = authClient.useSession();
+
+  const canMoveCard = (card: { members: { email: string; user: { email: string } | null }[] }) => {
+    if (role === "admin") return true;
+    if (card.members.length === 0) return true;
+    const userEmail = session?.user?.email;
+    if (!userEmail) return false;
+    return card.members.some((m) => m.email === userEmail);
+  };
 
   const { tooltipContent: createListShortcutTooltipContent } =
     useKeyboardShortcut({
@@ -272,6 +282,11 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     }
 
     if (type === "CARD" && canEditCard) {
+      const draggedCard = boardData?.lists
+        .flatMap((l) => l.cards)
+        .find((c) => c.publicId === draggableId);
+      if (draggedCard && !canMoveCard(draggedCard)) return;
+
       updateCardMutation.mutate({
         cardPublicId: draggableId,
 
@@ -580,7 +595,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                       key={card.publicId}
                                       draggableId={card.publicId}
                                       index={index}
-                                      isDragDisabled={!canEditCard}
+                                      isDragDisabled={!canEditCard || !canMoveCard(card)}
                                     >
                                       {(provided) => (
                                         <Link

@@ -26,6 +26,7 @@ export const userRouter = createTRPCRouter({
         email: z.string(),
         name: z.string().nullable(),
         image: z.string().nullable(),
+        isAdmin: z.boolean(),
         stripeCustomerId: z.string().nullable(),
         apiKey: z
           .object({

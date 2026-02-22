@@ -9,6 +9,7 @@ import { ZodError } from "zod";
 import type { dbClient } from "@kan/db/client";
 import { initAuth } from "@kan/auth/server";
 import { createDrizzleClient } from "@kan/db/client";
+import * as userRepo from "@kan/db/repository/user.repo";
 
 export interface User {
   id: string;
@@ -19,6 +20,7 @@ export interface User {
   updatedAt: Date;
   image?: string | null | undefined;
   stripeCustomerId?: string | null | undefined;
+  isAdmin?: boolean;
 }
 
 const createAuthWithHeaders = (
@@ -66,7 +68,15 @@ export const createTRPCContext = async ({ req }: CreateNextContextOptions) => {
 
   const session = await auth.api.getSession();
 
-  return createInnerTRPCContext({ db, user: session?.user, auth, headers });
+  let user: User | null = (session?.user ?? null) as User | null;
+  if (user) {
+    const dbUser = await userRepo.getById(db, user.id);
+    if (dbUser) {
+      user = { ...user, isAdmin: dbUser.isAdmin };
+    }
+  }
+
+  return createInnerTRPCContext({ db, user, auth, headers });
 };
 
 export const createNextApiContext = async (req: NextApiRequest) => {
@@ -77,7 +87,15 @@ export const createNextApiContext = async (req: NextApiRequest) => {
 
   const session = await auth.api.getSession();
 
-  return createInnerTRPCContext({ db, user: session?.user, auth, headers });
+  let user: User | null = (session?.user ?? null) as User | null;
+  if (user) {
+    const dbUser = await userRepo.getById(db, user.id);
+    if (dbUser) {
+      user = { ...user, isAdmin: dbUser.isAdmin };
+    }
+  }
+
+  return createInnerTRPCContext({ db, user, auth, headers });
 };
 
 export const createRESTContext = async ({ req }: CreateNextContextOptions) => {
@@ -94,7 +112,15 @@ export const createRESTContext = async ({ req }: CreateNextContextOptions) => {
     throw error;
   }
 
-  return createInnerTRPCContext({ db, user: session?.user, auth, headers });
+  let user: User | null = (session?.user ?? null) as User | null;
+  if (user) {
+    const dbUser = await userRepo.getById(db, user.id);
+    if (dbUser) {
+      user = { ...user, isAdmin: dbUser.isAdmin };
+    }
+  }
+
+  return createInnerTRPCContext({ db, user, auth, headers });
 };
 
 const t = initTRPC

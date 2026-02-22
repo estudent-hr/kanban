@@ -75,13 +75,13 @@ export const workspaceRouter = createTRPCRouter({
           message: `Workspace not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(ctx.db, userId, result.id, "workspace:view");
+      await assertPermission(ctx.db, userId, result.id, "workspace:view", ctx.user?.isAdmin);
 
       // Check if user is an admin
       const userMember = result.members.find(
         (member) => member.user?.id === userId,
       );
-      const isAdmin = userMember?.role === "admin";
+      const isAdmin = userMember?.role === "admin" || userMember?.role === "leader" || ctx.user?.isAdmin;
 
       // Show emails if user is admin OR workspace setting allows it
       const shouldShowEmails =
@@ -186,7 +186,7 @@ export const workspaceRouter = createTRPCRouter({
           message: `Workspace not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(ctx.db, userId, result.id, "workspace:view");
+      await assertPermission(ctx.db, userId, result.id, "workspace:view", ctx.user?.isAdmin);
 
       return result;
     }),
@@ -222,6 +222,13 @@ export const workspaceRouter = createTRPCRouter({
           message: `User not authenticated`,
           code: "UNAUTHORIZED",
         });
+
+      if (!ctx.user?.isAdmin) {
+        throw new TRPCError({
+          message: "Only global admins can create workspaces",
+          code: "FORBIDDEN",
+        });
+      }
 
       // Check if slug is provided in cloud environment
       if (input.slug && env("NEXT_PUBLIC_KAN_ENV") === "cloud") {
@@ -317,7 +324,7 @@ export const workspaceRouter = createTRPCRouter({
           message: `Workspace not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(ctx.db, userId, workspace.id, "workspace:edit");
+      await assertPermission(ctx.db, userId, workspace.id, "workspace:edit", ctx.user?.isAdmin);
 
       if (input.slug) {
         const reservedOrPremiumWorkspaceSlug =
@@ -399,7 +406,7 @@ export const workspaceRouter = createTRPCRouter({
           message: `Workspace not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(ctx.db, userId, workspace.id, "workspace:delete");
+      await assertPermission(ctx.db, userId, workspace.id, "workspace:delete", ctx.user?.isAdmin);
 
       const result = await workspaceRepo.hardDelete(
         ctx.db,
@@ -537,7 +544,7 @@ export const workspaceRouter = createTRPCRouter({
           message: `Workspace not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(ctx.db, userId, workspace.id, "workspace:view");
+      await assertPermission(ctx.db, userId, workspace.id, "workspace:view", ctx.user?.isAdmin);
 
       const result = await workspaceRepo.searchBoardsAndCards(
         ctx.db,

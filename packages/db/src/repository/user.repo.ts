@@ -17,6 +17,7 @@ export const getById = async (db: dbClient, userId: string) => {
       name: true,
       email: true,
       image: true,
+      isAdmin: true,
       stripeCustomerId: true,
     },
     with: {

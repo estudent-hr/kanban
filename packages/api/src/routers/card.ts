@@ -10,11 +10,13 @@ import * as listRepo from "@kan/db/repository/list.repo";
 import * as permissionRepo from "@kan/db/repository/permission.repo";
 import * as workspaceRepo from "@kan/db/repository/workspace.repo";
 import { cardToWorkspaceMembers } from "@kan/db/schema";
+import { roleHierarchy } from "@kan/shared";
+import type { Role } from "@kan/shared";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { mergeActivities } from "../utils/activities";
 import { sendMentionEmails } from "../utils/notifications";
-import { assertCanDelete, assertCanEdit, assertPermission } from "../utils/permissions";
+import { assertCanDelete, assertCanEdit, assertPermission, hasPermission } from "../utils/permissions";
 import { generateAttachmentUrl, generateAvatarUrl } from "@kan/shared/utils";
 
 export const cardRouter = createTRPCRouter({
@@ -864,13 +866,63 @@ export const cardRouter = createTRPCRouter({
           code: "NOT_FOUND",
         });
 
-      await assertCanEdit(
+      // Get the user's role in the workspace
+      const member = await permissionRepo.getMemberWithRole(
         ctx.db,
         userId,
         card.workspaceId,
-        "card:edit",
-        card.createdBy,
       );
+      const memberRole = member?.role as Role | undefined;
+      const isGlobalAdmin = ctx.user?.isAdmin;
+
+      // Determine if this is a move operation vs an edit operation
+      const isMoving = input.listPublicId !== undefined || input.index !== undefined;
+      const isEditing = input.title !== undefined || input.description !== undefined || input.dueDate !== undefined;
+
+      if (isEditing) {
+        // Members cannot edit card details — only admins and leaders can
+        if (!isGlobalAdmin && memberRole === "member") {
+          throw new TRPCError({
+            message: "Members cannot edit card details",
+            code: "FORBIDDEN",
+          });
+        }
+        await assertCanEdit(
+          ctx.db,
+          userId,
+          card.workspaceId,
+          "card:edit",
+          card.createdBy,
+          isGlobalAdmin,
+        );
+      }
+
+      if (isMoving && !isEditing) {
+        // For move-only operations, check card:move permission
+        const canMove = await hasPermission(
+          ctx.db,
+          userId,
+          card.workspaceId,
+          "card:move",
+          isGlobalAdmin,
+        );
+        if (!canMove) {
+          throw new TRPCError({
+            message: "You do not have permission to move cards",
+            code: "FORBIDDEN",
+          });
+        }
+      } else if (isMoving && isEditing) {
+        // If both moving and editing, card:edit already checked above
+        await assertCanEdit(
+          ctx.db,
+          userId,
+          card.workspaceId,
+          "card:edit",
+          card.createdBy,
+          isGlobalAdmin,
+        );
+      }
 
       const existingCard = await cardRepo.getByPublicId(
         ctx.db,
@@ -892,6 +944,18 @@ export const cardRouter = createTRPCRouter({
           });
 
         newListId = newList.id;
+
+        // Check list minimumRole for the target list
+        if (!isGlobalAdmin && memberRole && newList.minimumRole) {
+          const userLevel = roleHierarchy[memberRole] ?? 0;
+          const requiredLevel = roleHierarchy[newList.minimumRole as Role] ?? 0;
+          if (userLevel < requiredLevel) {
+            throw new TRPCError({
+              message: `Your role does not meet the minimum role requirement for the target list`,
+              code: "FORBIDDEN",
+            });
+          }
+        }
       }
 
       if (!existingCard) {
@@ -901,28 +965,23 @@ export const cardRouter = createTRPCRouter({
         });
       }
 
-      // Restrict card movement to assigned members and admins
+      // Restrict card movement: admin/leader/globalAdmin can move any card; members can only move assigned cards
       if (newListId && newListId !== existingCard.listId) {
-        const assignedMembers = await ctx.db
-          .select({ workspaceMemberId: cardToWorkspaceMembers.workspaceMemberId })
-          .from(cardToWorkspaceMembers)
-          .where(eq(cardToWorkspaceMembers.cardId, existingCard.id));
+        const isAdminOrLeader = isGlobalAdmin || memberRole === "admin" || memberRole === "leader";
 
-        if (assignedMembers.length > 0) {
-          const member = await permissionRepo.getMemberWithRole(
-            ctx.db,
-            userId,
-            card.workspaceId,
-          );
+        if (!isAdminOrLeader) {
+          const assignedMembers = await ctx.db
+            .select({ workspaceMemberId: cardToWorkspaceMembers.workspaceMemberId })
+            .from(cardToWorkspaceMembers)
+            .where(eq(cardToWorkspaceMembers.cardId, existingCard.id));
 
-          const isAdmin = member?.role === "admin";
           const isAssigned = member && assignedMembers.some(
             (am) => am.workspaceMemberId === member.id,
           );
 
-          if (!isAdmin && !isAssigned) {
+          if (!isAssigned) {
             throw new TRPCError({
-              message: "Only assigned members and admins can move this card",
+              message: "Members can only move cards assigned to them",
               code: "FORBIDDEN",
             });
           }

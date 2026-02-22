@@ -30,6 +30,7 @@ const permissionLabels: Record<Permission, string> = {
   "card:create": t`Can create cards`,
   "card:edit": t`Can edit cards`,
   "card:delete": t`Can delete cards`,
+  "card:move": t`Can move cards`,
 
   "comment:view": t`Can view comments`,
   "comment:create": t`Can add comments`,
@@ -57,7 +58,7 @@ export function RolePermissions() {
     (roles).includes(role.name as Role),
   );
 
-  const orderedRoleNames: Role[] = ["admin", "member", "guest"].filter(
+  const orderedRoleNames: Role[] = ["admin", "leader", "member", "guest"].filter(
     (role) => systemRoles.some((r) => r.name === role),
   ) as Role[];
 

@@ -38,6 +38,7 @@ export const permissionRouter = createTRPCRouter({
       z.object({
         permissions: z.array(z.string()),
         role: z.string(),
+        isGlobalAdmin: z.boolean(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -62,7 +63,9 @@ export const permissionRouter = createTRPCRouter({
         });
       }
 
-      const result = await getUserPermissions(ctx.db, userId, workspace.id);
+      const isGlobalAdmin = ctx.user?.isAdmin ?? false;
+
+      const result = await getUserPermissions(ctx.db, userId, workspace.id, isGlobalAdmin);
 
       if (!result) {
         throw new TRPCError({

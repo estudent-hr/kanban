@@ -241,6 +241,7 @@ export const getByPublicId = async (
           name: true,
           boardId: true,
           index: true,
+          minimumRole: true,
         },
         with: {
           cards: {
@@ -435,6 +436,7 @@ export const getBySlug = async (
           name: true,
           boardId: true,
           index: true,
+          minimumRole: true,
         },
         with: {
           cards: {

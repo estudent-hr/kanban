@@ -161,6 +161,7 @@ export const listRouter = createTRPCRouter({
         listPublicId: z.string().min(12),
         name: z.string().min(1).optional(),
         index: z.number().optional(),
+        minimumRole: z.enum(["leader", "member", "guest"]).optional(),
       }),
     )
     .output(
@@ -199,6 +200,14 @@ export const listRouter = createTRPCRouter({
 
       let result: { name: string; publicId: string } | undefined;
 
+      if (input.minimumRole) {
+        await listRepo.updateMinimumRole(
+          ctx.db,
+          input.listPublicId,
+          input.minimumRole,
+        );
+      }
+
       if (input.name) {
         result = await listRepo.update(
           ctx.db,
@@ -212,6 +221,14 @@ export const listRouter = createTRPCRouter({
           listPublicId: input.listPublicId,
           newIndex: input.index,
         });
+      }
+
+      if (!result && input.minimumRole) {
+        // If only minimumRole was updated, fetch the list to return
+        const updatedList = await listRepo.getByPublicId(ctx.db, input.listPublicId);
+        if (updatedList) {
+          result = { name: list.name, publicId: input.listPublicId };
+        }
       }
 
       if (!result)

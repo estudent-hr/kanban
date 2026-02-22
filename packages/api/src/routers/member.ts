@@ -682,7 +682,7 @@ export const memberRouter = createTRPCRouter({
       z.object({
         workspacePublicId: z.string().min(12),
         memberPublicId: z.string().min(12),
-        role: z.enum(["admin", "member", "guest"]),
+        role: z.enum(["admin", "leader", "member", "guest"]),
       }),
     )
     .output(

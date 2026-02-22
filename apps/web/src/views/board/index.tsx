@@ -65,16 +65,23 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
     direction: "horizontal",
   });
 
-  const { canCreateList, canEditList, canEditCard, canEditBoard, role } =
+  const { canCreateList, canEditList, canEditCard, canEditBoard, canMoveCard: canMoveCardPermission, role, isGlobalAdmin } =
     usePermissions();
   const { data: session } = authClient.useSession();
 
-  const canMoveCard = (card: { members: { email: string; user: { email: string } | null }[] }) => {
-    if (role === "admin") return true;
-    if (card.members.length === 0) return true;
+  const canMoveCardFn = (card: { members: { email: string; user: { email: string } | null }[] }) => {
+    if (isGlobalAdmin || role === "admin" || role === "leader") return true;
+    if (role === "guest") return false;
+    // Members can only move cards assigned to them
+    if (card.members.length === 0) return canMoveCardPermission;
     const userEmail = session?.user?.email;
     if (!userEmail) return false;
-    return card.members.some((m) => m.email === userEmail);
+    return card.members.some((m) => m.email === userEmail || m.user?.email === userEmail);
+  };
+
+  const getRoleLevel = (roleName: string | null): number => {
+    const levels: Record<string, number> = { admin: 100, leader: 75, member: 50, guest: 10 };
+    return levels[roleName ?? ""] ?? 0;
   };
 
   const { tooltipContent: createListShortcutTooltipContent } =
@@ -281,15 +288,24 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
       });
     }
 
-    if (type === "CARD" && canEditCard) {
+    if (type === "CARD" && canMoveCardPermission) {
       const draggedCard = boardData?.lists
         .flatMap((l) => l.cards)
         .find((c) => c.publicId === draggableId);
-      if (draggedCard && !canMoveCard(draggedCard)) return;
+      if (draggedCard && !canMoveCardFn(draggedCard)) return;
+
+      // Check target list's minimumRole
+      const targetList = boardData?.lists.find(
+        (l) => l.publicId === destination.droppableId,
+      );
+      if (targetList?.minimumRole && !isGlobalAdmin) {
+        const userLevel = getRoleLevel(role);
+        const requiredLevel = getRoleLevel(targetList.minimumRole);
+        if (userLevel < requiredLevel) return;
+      }
 
       updateCardMutation.mutate({
         cardPublicId: draggableId,
-
         listPublicId: destination.droppableId,
         index: destination.index,
       });
@@ -468,7 +484,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                   boardSlug={boardData?.slug ?? ""}
                   queryParams={queryParams}
                   isLoading={!boardData}
-                  isAdmin={workspace.role === "admin"}
+                  isAdmin={workspace.role === "admin" || workspace.role === "leader"}
                 />
                 {boardData && (
                   <Filters
@@ -595,7 +611,7 @@ export default function BoardPage({ isTemplate }: { isTemplate?: boolean }) {
                                       key={card.publicId}
                                       draggableId={card.publicId}
                                       index={index}
-                                      isDragDisabled={!canEditCard || !canMoveCard(card)}
+                                      isDragDisabled={!canMoveCardPermission || !canMoveCardFn(card)}
                                     >
                                       {(provided) => (
                                         <Link

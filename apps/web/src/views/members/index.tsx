@@ -144,7 +144,7 @@ export default function MembersPage() {
                     {memberName}
                   </p>
                 </div>
-                {((workspace.role === "admin" ||
+                {((workspace.role === "admin" || workspace.role === "leader" ||
                   data?.showEmailsToMembers === true) ||
                   showSkeleton) && (
                   <p
@@ -192,13 +192,14 @@ export default function MembersPage() {
                       value={memberRole}
                       onChange={(e) =>
                         handleRoleChange(
-                          e.target.value as "admin" | "member" | "guest",
+                          e.target.value as "admin" | "leader" | "member" | "guest",
                         )
                       }
                       disabled={updateRoleMutation.isPending}
                       className="absolute inset-0 h-full w-full cursor-pointer appearance-none border-none bg-transparent p-0 text-[10px] leading-none opacity-0 focus:outline-none focus-visible:outline-none sm:text-[11px]"
                     >
                       <option value="admin">{t`Admin`}</option>
+                      <option value="leader">{t`Leader`}</option>
                       <option value="member">{t`Member`}</option>
                       <option value="guest">{t`Guest`}</option>
                     </select>
@@ -214,7 +215,7 @@ export default function MembersPage() {
             <div
               className={twMerge(
                 "relative",
-                (workspace.role !== "admin" || showSkeleton) && "hidden",
+                (workspace.role !== "admin" && workspace.role !== "leader" || showSkeleton) && "hidden",
               )}
             >
               {session?.user.id !== memberId && (

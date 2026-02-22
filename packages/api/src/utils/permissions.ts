@@ -93,7 +93,10 @@ export async function hasPermission(
   userId: string,
   workspaceId: number,
   permission: Permission,
+  isGlobalAdmin?: boolean,
 ): Promise<boolean> {
+  if (isGlobalAdmin) return true;
+
   const member = await permissionRepo.getMemberWithRole(db, userId, workspaceId);
 
   if (!member) {
@@ -116,11 +119,25 @@ export async function getUserPermissions(
   db: dbClient,
   userId: string,
   workspaceId: number,
+  isGlobalAdmin?: boolean,
 ): Promise<{
   permissions: Permission[];
   role: string;
   roleId: number | null;
+  isGlobalAdmin: boolean;
 } | null> {
+  if (isGlobalAdmin) {
+    const member = await permissionRepo.getMemberWithRole(db, userId, workspaceId);
+    // Global admin gets all permissions even if not a member
+    const { allPermissions } = await import("@kan/shared");
+    return {
+      permissions: [...allPermissions],
+      role: member?.role ?? "admin",
+      roleId: member?.roleId ?? null,
+      isGlobalAdmin: true,
+    };
+  }
+
   const member = await permissionRepo.getMemberWithRole(db, userId, workspaceId);
 
   if (!member) {
@@ -138,6 +155,7 @@ export async function getUserPermissions(
     permissions,
     role: member.role,
     roleId: member.roleId,
+    isGlobalAdmin: false,
   };
 }
 
@@ -149,7 +167,10 @@ export async function assertPermission(
   userId: string,
   workspaceId: number,
   permission: Permission,
+  isGlobalAdmin?: boolean,
 ): Promise<void> {
+  if (isGlobalAdmin) return;
+
   const hasIt = await hasPermission(db, userId, workspaceId, permission);
 
   if (!hasIt) {
@@ -168,7 +189,10 @@ export async function assertCanManageRole(
   managerUserId: string,
   workspaceId: number,
   targetRoleName: string,
+  isGlobalAdmin?: boolean,
 ): Promise<void> {
+  if (isGlobalAdmin) return;
+
   const managerMember = await permissionRepo.getMemberWithRole(
     db,
     managerUserId,
@@ -200,7 +224,10 @@ export async function assertCanManageMember(
   managerUserId: string,
   workspaceId: number,
   targetMemberId: number,
+  isGlobalAdmin?: boolean,
 ): Promise<void> {
+  if (isGlobalAdmin) return;
+
   const managerMember = await permissionRepo.getMemberWithRole(
     db,
     managerUserId,
@@ -243,7 +270,10 @@ export async function assertCanDelete(
   workspaceId: number,
   permission: Permission,
   createdBy: string | null,
+  isGlobalAdmin?: boolean,
 ): Promise<void> {
+  if (isGlobalAdmin) return;
+
   // Check if user has the general delete permission
   const hasDeletePermission = await hasPermission(db, userId, workspaceId, permission);
 
@@ -273,7 +303,10 @@ export async function assertCanEdit(
   workspaceId: number,
   permission: Permission,
   createdBy: string | null,
+  isGlobalAdmin?: boolean,
 ): Promise<void> {
+  if (isGlobalAdmin) return;
+
   // Check if user has the general edit permission
   const hasEditPermission = await hasPermission(db, userId, workspaceId, permission);
 

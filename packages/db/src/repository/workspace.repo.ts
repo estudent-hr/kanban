@@ -36,8 +36,13 @@ const SYSTEM_ROLES: {
     hierarchyLevel: 100,
   },
   {
+    name: "leader",
+    description: "Full access within this workspace",
+    hierarchyLevel: 75,
+  },
+  {
     name: "member",
-    description: "Standard member with create and edit permissions",
+    description: "Standard member with view and move permissions",
     hierarchyLevel: 50,
   },
   {
@@ -201,7 +206,7 @@ export const getByPublicIdWithMembers = (
         },
         where: isNull(workspaceMembers.deletedAt),
         orderBy: (member, { desc }) => [
-          desc(sql`CASE WHEN ${member.role} = 'admin' THEN 1 ELSE 0 END`),
+          desc(sql`CASE WHEN ${member.role} = 'admin' THEN 2 WHEN ${member.role} = 'leader' THEN 1 ELSE 0 END`),
           desc(member.createdAt),
         ],
         with: {
@@ -338,7 +343,7 @@ export const isUserInWorkspace = async (
   db: dbClient,
   userId: string,
   workspaceId: number,
-  role?: "admin" | "member",
+  role?: "admin" | "leader" | "member",
 ) => {
   const result = await db.query.workspaceMembers.findFirst({
     columns: {

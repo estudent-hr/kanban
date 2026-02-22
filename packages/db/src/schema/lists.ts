@@ -13,6 +13,7 @@ import { boards } from "./boards";
 import { cards } from "./cards";
 import { imports } from "./imports";
 import { users } from "./users";
+import { memberRoleEnum } from "./workspaces";
 
 export const lists = pgTable("list", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
@@ -32,6 +33,7 @@ export const lists = pgTable("list", {
     .notNull()
     .references(() => boards.id, { onDelete: "cascade" }),
   importId: bigint("importId", { mode: "number" }).references(() => imports.id),
+  minimumRole: memberRoleEnum("minimumRole").notNull().default("member"),
 }).enableRLS();
 
 export const listsRelations = relations(lists, ({ one, many }) => ({

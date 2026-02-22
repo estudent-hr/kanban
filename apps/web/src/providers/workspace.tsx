@@ -18,7 +18,7 @@ interface Workspace {
   publicId: string;
   slug: string | undefined;
   plan: "free" | "pro" | "enterprise" | undefined;
-  role: "admin" | "member" | "guest";
+  role: "admin" | "leader" | "member" | "guest";
 }
 
 const initialWorkspace: Workspace = {

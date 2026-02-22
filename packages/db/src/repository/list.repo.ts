@@ -211,6 +211,7 @@ export const getByPublicId = async (db: dbClient, listPublicId: string) => {
       id: true,
       boardId: true,
       index: true,
+      minimumRole: true,
     },
     where: eq(lists.publicId, listPublicId),
   });
@@ -253,6 +254,23 @@ export const update = async (
     .returning({
       publicId: lists.publicId,
       name: lists.name,
+    });
+
+  return result;
+};
+
+export const updateMinimumRole = async (
+  db: dbClient,
+  listPublicId: string,
+  minimumRole: "leader" | "member" | "guest",
+) => {
+  const [result] = await db
+    .update(lists)
+    .set({ minimumRole })
+    .where(and(eq(lists.publicId, listPublicId), isNull(lists.deletedAt)))
+    .returning({
+      publicId: lists.publicId,
+      minimumRole: lists.minimumRole,
     });
 
   return result;
@@ -419,7 +437,7 @@ export const getWorkspaceAndListIdByListPublicId = async (
   listPublicId: string,
 ) => {
   const result = await db.query.lists.findFirst({
-    columns: { id: true, name: true, createdBy: true },
+    columns: { id: true, name: true, createdBy: true, minimumRole: true },
     where: and(eq(lists.publicId, listPublicId), isNull(lists.deletedAt)),
     with: {
       board: {
@@ -437,6 +455,7 @@ export const getWorkspaceAndListIdByListPublicId = async (
         id: result.id,
         name: result.name,
         createdBy: result.createdBy,
+        minimumRole: result.minimumRole,
         workspaceId: result.board.workspaceId,
         boardPublicId: result.board.publicId,
         boardName: result.board.name,

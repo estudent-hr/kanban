@@ -97,10 +97,10 @@ export default function Dashboard({
   });
 
   useEffect(() => {
-    if (hasLoaded && availableWorkspaces.length === 0) {
+    if (hasLoaded && availableWorkspaces.length === 0 && user?.isAdmin) {
       openModal("NEW_WORKSPACE", undefined, undefined, false);
     }
-  }, [hasLoaded, availableWorkspaces.length, openModal]);
+  }, [hasLoaded, availableWorkspaces.length, openModal, user?.isAdmin]);
 
   const isDarkMode = resolvedTheme === "dark";
 

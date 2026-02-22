@@ -28,6 +28,7 @@ interface List {
   publicId: string;
   name: string;
   createdBy?: string | null;
+  minimumRole?: string;
 }
 
 interface FormValues {
@@ -44,11 +45,12 @@ export default function List({
   setSelectedPublicListId,
 }: ListProps) {
   const { openModal } = useModal();
-  const { canCreateCard, canEditList, canDeleteList } = usePermissions();
+  const { canCreateCard, canEditList, canDeleteList, role, isGlobalAdmin } = usePermissions();
   const { data: session } = authClient.useSession();
   const isCreator = list.createdBy && session?.user.id === list.createdBy;
   const canEdit = canEditList || isCreator;
   const canDrag = canEditList || isCreator;
+  const canSetMinimumRole = isGlobalAdmin || role === "admin" || role === "leader";
 
   const openNewCardForm = (publicListId: PublicListId) => {
     if (!canCreateCard) return;
@@ -80,6 +82,13 @@ export default function List({
   const handleOpenDeleteListConfirmation = () => {
     setSelectedPublicListId(list.publicId);
     openModal("DELETE_LIST");
+  };
+
+  const handleMinimumRoleChange = (newRole: "leader" | "member" | "guest") => {
+    updateList.mutate({
+      listPublicId: list.publicId,
+      minimumRole: newRole,
+    });
   };
 
   return (
@@ -168,6 +177,26 @@ export default function List({
               })()}
             </div>
           </div>
+          {canSetMinimumRole && (
+            <div className="mb-2 flex items-center px-4">
+              <label className="mr-2 text-[10px] text-light-900 dark:text-dark-800">
+                {t`Min role`}:
+              </label>
+              <select
+                value={list.minimumRole ?? "member"}
+                onChange={(e) =>
+                  handleMinimumRoleChange(
+                    e.target.value as "leader" | "member" | "guest",
+                  )
+                }
+                className="h-5 rounded border border-light-500 bg-transparent px-1 py-0 text-[10px] text-light-900 focus:outline-none focus:ring-0 dark:border-dark-500 dark:text-dark-800"
+              >
+                <option value="leader">{t`Leader`}</option>
+                <option value="member">{t`Member`}</option>
+                <option value="guest">{t`Guest`}</option>
+              </select>
+            </div>
+          )}
           {children}
         </div>
       )}

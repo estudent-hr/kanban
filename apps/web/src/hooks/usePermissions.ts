@@ -8,11 +8,13 @@ interface UsePermissionsResult {
   permissions: Permission[];
   role: string | null;
   isLoading: boolean;
+  isGlobalAdmin: boolean;
   hasPermission: (permission: Permission) => boolean;
   canViewCard: boolean;
   canCreateCard: boolean;
   canEditCard: boolean;
   canDeleteCard: boolean;
+  canMoveCard: boolean;
   canCreateList: boolean;
   canEditList: boolean;
   canDeleteList: boolean;
@@ -33,18 +35,20 @@ interface UsePermissionsResult {
 export function usePermissions(): UsePermissionsResult {
   // Check if WorkspaceProvider is available (for public board views, it may not be)
   const workspaceContext = useContext(WorkspaceContext);
-  
+
   // If WorkspaceProvider is not available, return safe defaults
   if (!workspaceContext) {
     const emptyPermissions: UsePermissionsResult = {
       permissions: [],
       role: null,
       isLoading: false,
+      isGlobalAdmin: false,
       hasPermission: () => false,
       canViewCard: false,
       canCreateCard: false,
       canEditCard: false,
       canDeleteCard: false,
+      canMoveCard: false,
       canCreateList: false,
       canEditList: false,
       canDeleteList: false,
@@ -75,6 +79,7 @@ export function usePermissions(): UsePermissionsResult {
 
   const permissions = (data?.permissions ?? []) as Permission[];
   const role = data?.role ?? null;
+  const isGlobalAdmin = data?.isGlobalAdmin ?? false;
 
   const hasPermission = (permission: Permission): boolean => {
     return permissions.includes(permission);
@@ -84,11 +89,13 @@ export function usePermissions(): UsePermissionsResult {
     permissions,
     role,
     isLoading,
+    isGlobalAdmin,
     hasPermission,
     canViewCard: hasPermission("card:view"),
     canCreateCard: hasPermission("card:create"),
     canEditCard: hasPermission("card:edit"),
     canDeleteCard: hasPermission("card:delete"),
+    canMoveCard: isGlobalAdmin || hasPermission("card:move"),
     canCreateList: hasPermission("list:create"),
     canEditList: hasPermission("list:edit"),
     canDeleteList: hasPermission("list:delete"),
@@ -106,4 +113,3 @@ export function usePermissions(): UsePermissionsResult {
     canEditWorkspace: hasPermission("workspace:edit"),
   };
 }
-

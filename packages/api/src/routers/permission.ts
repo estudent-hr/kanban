@@ -9,6 +9,7 @@ import { allPermissions } from "@kan/shared";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
+  assertAdminRole,
   assertCanManageMember,
   assertPermission,
   getMemberEffectivePermissions,
@@ -206,6 +207,7 @@ export const permissionRouter = createTRPCRouter({
       }
 
       await assertPermission(ctx.db, userId, workspace.id, "member:edit");
+      await assertAdminRole(ctx.db, userId, workspace.id, ctx.user?.isAdmin);
 
       const member = await memberRepo.getByPublicId(
         ctx.db,
@@ -271,6 +273,7 @@ export const permissionRouter = createTRPCRouter({
       }
 
       await assertPermission(ctx.db, userId, workspace.id, "member:edit");
+      await assertAdminRole(ctx.db, userId, workspace.id, ctx.user?.isAdmin);
 
       const member = await memberRepo.getByPublicId(
         ctx.db,
@@ -336,6 +339,7 @@ export const permissionRouter = createTRPCRouter({
       }
 
       await assertPermission(ctx.db, userId, workspace.id, "member:edit");
+      await assertAdminRole(ctx.db, userId, workspace.id, ctx.user?.isAdmin);
 
       const member = await memberRepo.getByPublicId(
         ctx.db,
@@ -396,6 +400,7 @@ export const permissionRouter = createTRPCRouter({
       }
 
       await assertPermission(ctx.db, userId, workspace.id, "member:edit");
+      await assertAdminRole(ctx.db, userId, workspace.id, ctx.user?.isAdmin);
 
       await permissionRepo.clearAllMemberPermissionOverridesForWorkspace(
         ctx.db,
@@ -663,6 +668,7 @@ export const permissionRouter = createTRPCRouter({
 
       // Require ability to edit members/roles
       await assertPermission(ctx.db, userId, workspace.id, "member:edit");
+      await assertAdminRole(ctx.db, userId, workspace.id, ctx.user?.isAdmin);
 
       const role = await permissionRepo.getRoleByWorkspaceIdAndPublicId(
         ctx.db,
@@ -747,6 +753,7 @@ export const permissionRouter = createTRPCRouter({
       }
 
       await assertPermission(ctx.db, userId, workspace.id, "member:edit");
+      await assertAdminRole(ctx.db, userId, workspace.id, ctx.user?.isAdmin);
 
       const role = await permissionRepo.getRoleByWorkspaceIdAndPublicId(
         ctx.db,

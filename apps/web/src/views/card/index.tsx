@@ -193,6 +193,11 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
   const isCreator = card?.createdBy && session?.user.id === card.createdBy;
   const canEdit = canEditCard || isCreator;
 
+  const isAssignedToCard = card?.members?.some(
+    (m) => m.user?.id === session?.user.id,
+  ) ?? false;
+  const canToggleChecklist = canEdit || isAssignedToCard;
+
   const refetchCard = async () => {
     if (cardId) await utils.card.byId.refetch({ cardPublicId: cardId });
   };
@@ -423,6 +428,7 @@ export default function CardPage({ isTemplate }: { isTemplate?: boolean }) {
                     activeChecklistForm={activeChecklistForm}
                     setActiveChecklistForm={setActiveChecklistForm}
                     viewOnly={!canEdit}
+                    canToggleCheckbox={canToggleChecklist}
                   />
                   {!isTemplate && (
                     <>

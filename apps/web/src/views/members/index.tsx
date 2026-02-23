@@ -99,7 +99,7 @@ export default function MembersPage() {
     showSkeleton?: boolean;
     showPendingIcon?: boolean;
   }) => {
-    const handleRoleChange = (newRole: "admin" | "member" | "guest") => {
+    const handleRoleChange = (newRole: "admin" | "leader" | "member" | "guest") => {
       if (!memberPublicId) return;
 
       updateRoleMutation.mutate({
@@ -215,21 +215,25 @@ export default function MembersPage() {
             <div
               className={twMerge(
                 "relative",
-                (workspace.role !== "admin" && workspace.role !== "leader" || showSkeleton) && "hidden",
+                ((workspace.role !== "admin" && workspace.role !== "leader") || showSkeleton) && "hidden",
               )}
             >
               {session?.user.id !== memberId && (
                 <Dropdown
                   items={[
-                    {
-                      label: t`Edit permissions`,
-                      action: () =>
-                        openModal(
-                          "EDIT_MEMBER_PERMISSIONS",
-                          memberPublicId,
-                          memberEmail ?? "",
-                        ),
-                    },
+                    ...(workspace.role === "admin"
+                      ? [
+                          {
+                            label: t`Edit permissions`,
+                            action: () =>
+                              openModal(
+                                "EDIT_MEMBER_PERMISSIONS",
+                                memberPublicId,
+                                memberEmail ?? "",
+                              ),
+                          },
+                        ]
+                      : []),
                     {
                       label: t`Remove member`,
                       action: () =>

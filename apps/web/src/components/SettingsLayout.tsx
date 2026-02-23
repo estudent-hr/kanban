@@ -31,7 +31,7 @@ export function SettingsLayout({ children, currentTab }: SettingsLayoutProps) {
   const { canViewWorkspace, canEditWorkspace } = usePermissions();
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
-  const isAdmin = workspace.role === "admin" || workspace.role === "leader";
+  const isAdmin = workspace.role === "admin";
 
   const settingsTabs = [
     {

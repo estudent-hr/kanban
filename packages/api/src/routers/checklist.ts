@@ -5,8 +5,12 @@ import * as cardRepo from "@kan/db/repository/card.repo";
 import * as cardActivityRepo from "@kan/db/repository/cardActivity.repo";
 import * as checklistRepo from "@kan/db/repository/checklist.repo";
 
+import * as permissionRepo from "@kan/db/repository/permission.repo";
+import { cardToWorkspaceMembers } from "@kan/db/schema";
+import { eq } from "drizzle-orm";
+
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { assertPermission } from "../utils/permissions";
+import { assertPermission, hasPermission } from "../utils/permissions";
 
 const checklistSchema = z.object({
   publicId: z.string().length(12),
@@ -303,12 +307,48 @@ export const checklistRouter = createTRPCRouter({
           message: `Checklist item with public ID ${input.checklistItemPublicId} not found`,
           code: "NOT_FOUND",
         });
-      await assertPermission(
-        ctx.db,
-        userId,
-        item.checklist.card.list.board.workspace.id,
-        "card:edit",
-      );
+
+      const workspaceId = item.checklist.card.list.board.workspace.id;
+      const canEditCard = await hasPermission(ctx.db, userId, workspaceId, "card:edit");
+
+      if (!canEditCard) {
+        // Check if user is only toggling completed and is assigned to the card
+        const isOnlyTogglingCompleted =
+          input.completed !== undefined &&
+          input.title === undefined &&
+          input.index === undefined;
+
+        if (!isOnlyTogglingCompleted) {
+          throw new TRPCError({
+            message: "You do not have permission to perform this action (card:edit)",
+            code: "FORBIDDEN",
+          });
+        }
+
+        const member = await permissionRepo.getMemberWithRole(ctx.db, userId, workspaceId);
+        if (!member) {
+          throw new TRPCError({
+            message: "You do not have permission to perform this action (card:edit)",
+            code: "FORBIDDEN",
+          });
+        }
+
+        const assignedMembers = await ctx.db
+          .select({ workspaceMemberId: cardToWorkspaceMembers.workspaceMemberId })
+          .from(cardToWorkspaceMembers)
+          .where(eq(cardToWorkspaceMembers.cardId, item.checklist.cardId));
+
+        const isAssigned = assignedMembers.some(
+          (am) => am.workspaceMemberId === member.id,
+        );
+
+        if (!isAssigned) {
+          throw new TRPCError({
+            message: "You do not have permission to perform this action (card:edit)",
+            code: "FORBIDDEN",
+          });
+        }
+      }
 
       const previousTitle = item.title;
 

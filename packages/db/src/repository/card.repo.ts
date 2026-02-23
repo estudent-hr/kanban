@@ -945,7 +945,7 @@ export const getWorkspaceAndCardIdByCardPublicId = async (
     where: and(eq(cards.publicId, cardPublicId), isNull(cards.deletedAt)),
     with: {
       list: {
-        columns: { name: true },
+        columns: { id: true, name: true, minimumRole: true },
         with: {
           board: {
             columns: {
@@ -966,7 +966,9 @@ export const getWorkspaceAndCardIdByCardPublicId = async (
         createdBy: result.createdBy,
         workspaceId: result.list.board.workspaceId,
         workspaceVisibility: result.list.board.visibility,
+        listId: result.list.id,
         listName: result.list.name,
+        listMinimumRole: result.list.minimumRole,
         boardPublicId: result.list.board.publicId,
         boardName: result.list.board.name,
       }

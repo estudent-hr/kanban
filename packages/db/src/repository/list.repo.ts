@@ -205,6 +205,18 @@ export const bulkCreate = async (
   });
 };
 
+export const getById = async (db: dbClient, listId: number) => {
+  return db.query.lists.findFirst({
+    columns: {
+      id: true,
+      boardId: true,
+      index: true,
+      minimumRole: true,
+    },
+    where: eq(lists.id, listId),
+  });
+};
+
 export const getByPublicId = async (db: dbClient, listPublicId: string) => {
   return db.query.lists.findFirst({
     columns: {

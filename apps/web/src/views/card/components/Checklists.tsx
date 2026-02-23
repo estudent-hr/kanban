@@ -30,6 +30,7 @@ interface ChecklistsProps {
   activeChecklistForm?: string | null;
   setActiveChecklistForm?: (id: string | null) => void;
   viewOnly?: boolean;
+  canToggleCheckbox?: boolean;
 }
 
 export default function Checklists({
@@ -38,6 +39,7 @@ export default function Checklists({
   activeChecklistForm,
   setActiveChecklistForm,
   viewOnly = false,
+  canToggleCheckbox,
 }: ChecklistsProps) {
   const { openModal } = useModal();
   const { showPopup } = usePopup();
@@ -214,6 +216,7 @@ export default function Checklists({
                                   setActiveChecklistForm?.(checklist.publicId)
                                 }
                                 viewOnly={viewOnly}
+                                canToggleCheckbox={canToggleCheckbox}
                                 dragHandleProps={provided.dragHandleProps}
                                 isDragging={snapshot.isDragging}
                               />

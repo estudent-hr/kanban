@@ -182,6 +182,27 @@ export async function assertPermission(
 }
 
 /**
+ * Assert user is an admin in the workspace - throws FORBIDDEN if not
+ */
+export async function assertAdminRole(
+  db: dbClient,
+  userId: string,
+  workspaceId: number,
+  isGlobalAdmin?: boolean,
+): Promise<void> {
+  if (isGlobalAdmin) return;
+
+  const member = await permissionRepo.getMemberWithRole(db, userId, workspaceId);
+
+  if (!member || member.role !== "admin") {
+    throw new TRPCError({
+      message: "Only admins can manage permissions",
+      code: "FORBIDDEN",
+    });
+  }
+}
+
+/**
  * Assert user can assign a specific role (based on hierarchy)
  */
 export async function assertCanManageRole(

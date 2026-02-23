@@ -141,6 +141,7 @@ export function EditMemberPermissionsModal() {
     "card:create": t`Can create cards`,
     "card:edit": t`Can edit cards`,
     "card:delete": t`Can delete cards`,
+    "card:move": t`Can move cards`,
 
     "comment:view": t`Can view comments`,
     "comment:create": t`Can add comments`,

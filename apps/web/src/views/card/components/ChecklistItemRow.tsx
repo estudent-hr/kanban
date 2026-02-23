@@ -19,6 +19,7 @@ interface ChecklistItemRowProps {
   cardPublicId: string;
   onCreateNewItem?: () => void;
   viewOnly?: boolean;
+  canToggleCheckbox?: boolean;
   dragHandleProps?: DraggableProvided["dragHandleProps"];
   isDragging?: boolean;
 }
@@ -28,6 +29,7 @@ export default function ChecklistItemRow({
   cardPublicId,
   onCreateNewItem,
   viewOnly = false,
+  canToggleCheckbox,
   dragHandleProps,
   isDragging = false,
 }: ChecklistItemRowProps) {
@@ -118,8 +120,10 @@ export default function ChecklistItemRow({
       .replace(/&nbsp;/g, " ")
       .trim();
 
+  const canToggle = canToggleCheckbox !== undefined ? canToggleCheckbox : !viewOnly;
+
   const handleToggleCompleted = () => {
-    if (viewOnly) return;
+    if (!canToggle) return;
     setCompleted((prev) => !prev);
     updateItem.mutate({
       checklistItemPublicId: item.publicId,
@@ -171,7 +175,7 @@ export default function ChecklistItemRow({
           type="checkbox"
           checked={completed}
           onChange={(e) => {
-            if (viewOnly) {
+            if (!canToggle) {
               e.preventDefault();
               return;
             }
@@ -179,7 +183,7 @@ export default function ChecklistItemRow({
           }}
           className={twMerge(
             "h-[16px] w-[16px] appearance-none rounded-md border border-light-500 bg-transparent outline-none ring-0 checked:bg-blue-600 focus:shadow-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none dark:border-dark-500 dark:hover:border-dark-500",
-            viewOnly ? "cursor-default" : "cursor-pointer",
+            canToggle ? "cursor-pointer" : "cursor-default",
           )}
         />
       </label>

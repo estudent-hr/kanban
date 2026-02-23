@@ -65,6 +65,26 @@ export const cardRouter = createTRPCRouter({
 
       await assertPermission(ctx.db, userId, list.workspaceId, "card:create");
 
+      // Check list minimumRole before creating a card
+      if (!ctx.user?.isAdmin && list.minimumRole) {
+        const member = await permissionRepo.getMemberWithRole(
+          ctx.db,
+          userId,
+          list.workspaceId,
+        );
+        const memberRole = member?.role as Role | undefined;
+        if (memberRole) {
+          const userLevel = roleHierarchy[memberRole] ?? 0;
+          const requiredLevel = roleHierarchy[list.minimumRole as Role] ?? 0;
+          if (userLevel < requiredLevel) {
+            throw new TRPCError({
+              message: "Your role does not meet the minimum role requirement for this list",
+              code: "FORBIDDEN",
+            });
+          }
+        }
+      }
+
       const newCard = await cardRepo.create(ctx.db, {
         title: input.title,
         description: input.description,
@@ -965,6 +985,21 @@ export const cardRouter = createTRPCRouter({
         });
       }
 
+      // Check source list minimumRole when moving to a different list
+      if (newListId && newListId !== existingCard.listId && !isGlobalAdmin && memberRole) {
+        const sourceList = await listRepo.getById(ctx.db, existingCard.listId);
+        if (sourceList?.minimumRole) {
+          const userLevel = roleHierarchy[memberRole] ?? 0;
+          const requiredLevel = roleHierarchy[sourceList.minimumRole as Role] ?? 0;
+          if (userLevel < requiredLevel) {
+            throw new TRPCError({
+              message: "Your role does not meet the minimum role requirement for the source list",
+              code: "FORBIDDEN",
+            });
+          }
+        }
+      }
+
       // Restrict card movement: admin/leader/globalAdmin can move any card; members can only move assigned cards
       if (newListId && newListId !== existingCard.listId) {
         const isAdminOrLeader = isGlobalAdmin || memberRole === "admin" || memberRole === "leader";
@@ -1143,6 +1178,26 @@ export const cardRouter = createTRPCRouter({
         "card:delete",
         card.createdBy,
       );
+
+      // Check list minimumRole
+      if (!ctx.user?.isAdmin && card.listMinimumRole) {
+        const member = await permissionRepo.getMemberWithRole(
+          ctx.db,
+          userId,
+          card.workspaceId,
+        );
+        const memberRole = member?.role as Role | undefined;
+        if (memberRole) {
+          const userLevel = roleHierarchy[memberRole] ?? 0;
+          const requiredLevel = roleHierarchy[card.listMinimumRole as Role] ?? 0;
+          if (userLevel < requiredLevel) {
+            throw new TRPCError({
+              message: "Your role does not meet the minimum role requirement for this list",
+              code: "FORBIDDEN",
+            });
+          }
+        }
+      }
 
       const deletedAt = new Date();
 

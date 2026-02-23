@@ -160,11 +160,24 @@ export default function SideNavigation({
         <div>
           <div className="hidden h-[45px] items-center justify-between pb-3 md:flex">
             {!isCollapsed && (
-              <Link href="/" className="block">
-                <h1 className="pl-2 text-[16px] font-bold tracking-tight text-neutral-900 dark:text-dark-1000">
-                  kan.bn
-                </h1>
-              </Link>
+              <div className="block pl-2">
+                <Link href="/">
+                  <h1 className="text-[16px] font-bold tracking-tight text-neutral-900 dark:text-dark-1000">
+                    Zadatko
+                  </h1>
+                </Link>
+                <p className="text-[10px] text-light-700 dark:text-dark-700">
+                  powered by{" "}
+                  <a
+                    href="https://kan.bn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    kan.bn
+                  </a>
+                </p>
+              </div>
             )}
             <Button
               onClick={toggleCollapse}

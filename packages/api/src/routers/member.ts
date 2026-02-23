@@ -216,6 +216,8 @@ export const memberRouter = createTRPCRouter({
           code: "NOT_FOUND",
         });
 
+      await assertCanManageMember(ctx.db, userId, workspace.id, member.id);
+
       const deletedMember = await memberRepo.softDelete(ctx.db, {
         memberId: member.id,
         deletedAt: new Date(),

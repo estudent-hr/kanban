@@ -58,6 +58,7 @@ export default {
         },
       },
       colors: {
+        brand: "#c5272f",
         "dark-50": "#161616",
         "dark-100": "#1c1c1c",
         "dark-200": "#232323",

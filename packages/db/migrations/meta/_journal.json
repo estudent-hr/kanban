@@ -201,12 +201,19 @@
     {
       "idx": 28,
       "version": "7",
-      "when": 1771790400000,
-      "tag": "20260222200000_AddPermissionSystemOverhaul",
-      "breakpoints": true
+      "when": 1771789800000,
+      "tag": "20260222195900_AddLeaderEnumValue",
+      "breakpoints": false
     },
     {
       "idx": 29,
+      "version": "7",
+      "when": 1771790400000,
+      "tag": "20260222200000_AddPermissionSystemOverhaul",
+      "breakpoints": false
+    },
+    {
+      "idx": 30,
       "version": "7",
       "when": 1772323200000,
       "tag": "20260228200000_AddCardMoveEmailNotifications",

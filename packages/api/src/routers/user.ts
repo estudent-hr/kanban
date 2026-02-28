@@ -66,6 +66,85 @@ export const userRouter = createTRPCRouter({
         apiKey: apiKey ?? null,
       };
     }),
+  getAdmins: protectedProcedure
+    .input(z.void())
+    .query(async ({ ctx }) => {
+      if (ctx.user?.isAdmin !== true) {
+        throw new TRPCError({
+          message: "Forbidden",
+          code: "FORBIDDEN",
+        });
+      }
+
+      const admins = await userRepo.getAllAdmins(ctx.db);
+
+      const adminsWithAvatars = await Promise.all(
+        admins.map(async (admin) => ({
+          ...admin,
+          image: await generateAvatarUrl(admin.image),
+        })),
+      );
+
+      return adminsWithAvatars;
+    }),
+  getAllUsers: protectedProcedure
+    .input(z.void())
+    .query(async ({ ctx }) => {
+      if (ctx.user?.isAdmin !== true) {
+        throw new TRPCError({
+          message: "Forbidden",
+          code: "FORBIDDEN",
+        });
+      }
+
+      const users = await userRepo.getAllUsers(ctx.db);
+
+      const usersWithAvatars = await Promise.all(
+        users.map(async (user) => ({
+          ...user,
+          image: await generateAvatarUrl(user.image),
+        })),
+      );
+
+      return usersWithAvatars;
+    }),
+  setAdminStatus: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        isAdmin: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user?.isAdmin !== true) {
+        throw new TRPCError({
+          message: "Forbidden",
+          code: "FORBIDDEN",
+        });
+      }
+
+      if (input.userId === ctx.user.id && !input.isAdmin) {
+        throw new TRPCError({
+          message: "Cannot remove your own admin status",
+          code: "BAD_REQUEST",
+        });
+      }
+
+      const result = await userRepo.setAdminStatus(
+        ctx.db,
+        input.userId,
+        input.isAdmin,
+      );
+
+      if (!result) {
+        throw new TRPCError({
+          message: "User not found",
+          code: "NOT_FOUND",
+        });
+      }
+
+      return result;
+    }),
   update: protectedProcedure
     .meta({
       openapi: {

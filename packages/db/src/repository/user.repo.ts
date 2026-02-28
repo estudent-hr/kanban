@@ -72,6 +72,50 @@ export const create = async (
   return result;
 };
 
+export const getAllAdmins = async (db: dbClient) => {
+  return await db.query.users.findMany({
+    columns: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      isAdmin: true,
+    },
+    where: eq(users.isAdmin, true),
+  });
+};
+
+export const getAllUsers = async (db: dbClient) => {
+  return await db.query.users.findMany({
+    columns: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      isAdmin: true,
+    },
+  });
+};
+
+export const setAdminStatus = async (
+  db: dbClient,
+  userId: string,
+  isAdmin: boolean,
+) => {
+  const [result] = await db
+    .update(users)
+    .set({ isAdmin })
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      isAdmin: users.isAdmin,
+    });
+
+  return result;
+};
+
 export const update = async (
   db: dbClient,
   userId: string,

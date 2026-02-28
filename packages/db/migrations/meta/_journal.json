@@ -203,7 +203,7 @@
       "version": "7",
       "when": 1771790400000,
       "tag": "20260222200000_AddPermissionSystemOverhaul",
-      "breakpoints": false
+      "breakpoints": true
     },
     {
       "idx": 29,

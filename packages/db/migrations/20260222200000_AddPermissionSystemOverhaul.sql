@@ -3,7 +3,7 @@ ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "isAdmin" boolean NOT NULL DEFAULT f
 
 -- Add leader value to role enum
 ALTER TYPE "role" ADD VALUE IF NOT EXISTS 'leader';
-
+--> statement-breakpoint
 -- Add minimumRole column to list table
 ALTER TABLE "list" ADD COLUMN IF NOT EXISTS "minimumRole" "role" NOT NULL DEFAULT 'member';
 

@@ -74,6 +74,7 @@ WORKDIR /db
 
 COPY packages/db/drizzle.config.ts ./drizzle.config.ts
 COPY packages/db/migrations/ ./migrations/
+COPY packages/db/pre-migrate.cjs ./pre-migrate.cjs
 
 RUN npm init -y && \
     npm install drizzle-kit drizzle-orm pg --save-exact && \
@@ -95,7 +96,7 @@ RUN npm init -y && \
     find node_modules -type d -empty -delete && \
     rm -rf /root/.npm /tmp/*
 
-CMD ["npx", "drizzle-kit", "migrate"]
+CMD ["sh", "-c", "node pre-migrate.cjs && npx drizzle-kit migrate"]
 
 # ============================================
 # Stage 6: Production web image (distroless)

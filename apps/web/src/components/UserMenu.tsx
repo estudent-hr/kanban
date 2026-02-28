@@ -184,38 +184,30 @@ export default function UserMenu({
                   }}
                   className="flex w-full items-center rounded-[5px] px-3 py-2 text-left text-xs hover:bg-light-200 dark:hover:bg-dark-400"
                 >
-                  {t`Shortcuts`}
+                  {t`Prečaci`}
                 </button>
               </Menu.Item>
               <Menu.Item>
                 <Link
-                  href="mailto:support@kan.bn"
+                  href="https://github.com/estudent-hr/kanban"
                   target="_blank"
                   rel="noreferrer"
                   onClick={handleLinkClick}
                   className="flex w-full items-center rounded-[5px] px-3 py-2 text-left text-xs hover:bg-light-200 dark:hover:bg-dark-400"
                 >
-                  {t`Support`}
+                  {t`Izvorni kod`}
                 </Link>
               </Menu.Item>
               <Menu.Item>
                 <Link
-                  href="https://docs.kan.bn"
+                  href="mailto:it.podrska@estudent.hr"
                   target="_blank"
                   rel="noreferrer"
                   onClick={handleLinkClick}
                   className="flex w-full items-center rounded-[5px] px-3 py-2 text-left text-xs hover:bg-light-200 dark:hover:bg-dark-400"
                 >
-                  {t`Documentation`}
+                  {t`Pomoć`}
                 </Link>
-              </Menu.Item>
-              <Menu.Item>
-                <button
-                  onClick={() => handleModalOpen("NEW_FEEDBACK")}
-                  className="flex w-full items-center rounded-[5px] px-3 py-2 text-left text-xs hover:bg-light-200 dark:hover:bg-dark-400"
-                >
-                  {t`Feedback`}
-                </button>
               </Menu.Item>
             </div>
             <div className="light-border-600 border-t-[1px] p-1 dark:border-dark-600">
@@ -224,7 +216,7 @@ export default function UserMenu({
                   onClick={handleLogout}
                   className="flex w-full items-center rounded-[5px] px-3 py-2 text-left text-xs hover:bg-light-200 dark:hover:bg-dark-400"
                 >
-                  {t`Logout`}
+                  {t`Odjavi se`}
                 </button>
               </Menu.Item>
             </div>

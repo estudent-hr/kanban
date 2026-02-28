@@ -4,7 +4,7 @@ CREATE TYPE "public"."board_visibility" AS ENUM('private', 'public');--> stateme
 CREATE TYPE "public"."card_activity_type" AS ENUM('card.created', 'card.updated.title', 'card.updated.description', 'card.updated.index', 'card.updated.list', 'card.updated.label.added', 'card.updated.label.removed', 'card.updated.member.added', 'card.updated.member.removed', 'card.updated.comment.added', 'card.updated.comment.updated', 'card.updated.comment.deleted', 'card.archived');--> statement-breakpoint
 CREATE TYPE "public"."source" AS ENUM('trello');--> statement-breakpoint
 CREATE TYPE "public"."status" AS ENUM('started', 'success', 'failed');--> statement-breakpoint
-CREATE TYPE "public"."role" AS ENUM('admin', 'member', 'guest');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('admin', 'member', 'guest', 'leader');--> statement-breakpoint
 CREATE TYPE "public"."member_status" AS ENUM('invited', 'active', 'removed');--> statement-breakpoint
 CREATE TYPE "public"."slug_type" AS ENUM('reserved', 'premium');--> statement-breakpoint
 CREATE TYPE "public"."workspace_plan" AS ENUM('free', 'pro', 'enterprise');--> statement-breakpoint

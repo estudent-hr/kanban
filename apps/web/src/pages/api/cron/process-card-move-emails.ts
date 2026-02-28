@@ -94,8 +94,8 @@ export default async function handler(
         const count = recipient.movements.length;
         const subject =
           count === 1
-            ? `Card "${recipient.movements[0]!.cardTitle}" was moved to ${recipient.movements[0]!.toListName}`
-            : `${count} cards were moved`;
+            ? `Zadatak "${recipient.movements[0]!.cardTitle}" premješten u ${recipient.movements[0]!.toListName}`
+            : `${count} zadatka premještena`;
 
         await sendEmail(recipient.email, subject, "CARD_MOVE_DIGEST", {
           movements: JSON.stringify(recipient.movements),

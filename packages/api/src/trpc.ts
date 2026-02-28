@@ -1,6 +1,7 @@
 import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
 import type { NextApiRequest } from "next";
 import type { OpenApiMeta } from "trpc-to-openapi";
+import { timingSafeEqual } from "crypto";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { env } from "next-runtime-env";
 import superjson from "superjson";
@@ -159,7 +160,24 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
 });
 
 const enforceUserIsAdmin = t.middleware(async ({ ctx, next }) => {
-  if (ctx.headers.get("x-admin-api-key") !== env("KAN_ADMIN_API_KEY")) {
+  if (!ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  const adminKey = env("KAN_ADMIN_API_KEY");
+  const providedKey = ctx.headers.get("x-admin-api-key");
+
+  if (!adminKey || !providedKey) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  const adminKeyBuf = Buffer.from(adminKey, "utf8");
+  const providedKeyBuf = Buffer.from(providedKey, "utf8");
+
+  if (
+    adminKeyBuf.length !== providedKeyBuf.length ||
+    !timingSafeEqual(adminKeyBuf, providedKeyBuf)
+  ) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 

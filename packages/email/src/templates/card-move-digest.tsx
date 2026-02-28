@@ -53,7 +53,12 @@ export const CardMoveDigestTemplate = ({
               color: "#232323",
             }}
           >
-            Zadatko
+            <Link
+              href={env("NEXT_PUBLIC_BASE_URL") ?? "/"}
+              style={{ color: "#232323", textDecoration: "none" }}
+            >
+              Zadatko
+            </Link>
           </Heading>
           <Heading
             style={{ fontSize: "20px", fontWeight: "bold", color: "#c5272f" }}
@@ -98,7 +103,7 @@ export const CardMoveDigestTemplate = ({
                 style={{ fontSize: "0.75rem", color: "#666666", margin: "0" }}
               >
                 {movement.fromListName} &rarr; {movement.toListName} u projektu{" "}
-                {movement.boardName}
+                <strong>{movement.boardName}</strong>
               </Text>
             </Section>
           ))}

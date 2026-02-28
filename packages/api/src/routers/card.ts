@@ -15,6 +15,7 @@ import type { Role } from "@kan/shared";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { mergeActivities } from "../utils/activities";
+import { queueCardMoveEmails } from "../utils/cardMoveEmails";
 import { sendMentionEmails } from "../utils/notifications";
 import { assertCanDelete, assertCanEdit, assertPermission, hasPermission } from "../utils/permissions";
 import { generateAttachmentUrl, generateAvatarUrl } from "@kan/shared/utils";
@@ -1125,6 +1126,20 @@ export const cardRouter = createTRPCRouter({
           createdBy: userId,
           fromListId: existingCard.listId,
           toListId: newListId,
+        });
+
+        // Queue email notifications for card move (fire-and-forget)
+        queueCardMoveEmails({
+          db: ctx.db,
+          cardId: result.id,
+          cardPublicId: input.cardPublicId,
+          cardTitle: result.title,
+          fromListId: existingCard.listId,
+          toListId: newListId,
+          movedByUserId: userId,
+          workspaceId: card.workspaceId,
+        }).catch((error) => {
+          console.error("Failed to queue card move emails:", error);
         });
       }
 

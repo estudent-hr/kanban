@@ -1,18 +1,20 @@
 import { render } from "@react-email/render";
 import nodemailer from "nodemailer";
 
+import CardMoveDigestTemplate from "./templates/card-move-digest";
 import JoinWorkspaceTemplate from "./templates/join-workspace";
 import MagicLinkTemplate from "./templates/magic-link";
 import MentionTemplate from "./templates/mention";
 import ResetPasswordTemplate from "./templates/reset-password";
 
-type Templates = "MAGIC_LINK" | "JOIN_WORKSPACE" | "RESET_PASSWORD" | "MENTION";
+type Templates = "MAGIC_LINK" | "JOIN_WORKSPACE" | "RESET_PASSWORD" | "MENTION" | "CARD_MOVE_DIGEST";
 
 const emailTemplates: Record<Templates, React.ComponentType<any>> = {
   MAGIC_LINK: MagicLinkTemplate,
   JOIN_WORKSPACE: JoinWorkspaceTemplate,
   RESET_PASSWORD: ResetPasswordTemplate,
   MENTION: MentionTemplate,
+  CARD_MOVE_DIGEST: CardMoveDigestTemplate,
 };
 
 const transporter = nodemailer.createTransport({

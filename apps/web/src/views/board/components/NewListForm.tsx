@@ -64,6 +64,8 @@ export function NewListForm({
           cards: [],
           index: oldBoard.lists.length,
           minimumRole: "member" as const,
+          emailAssigneesOnMove: false,
+          emailLeadersOnMove: false,
         };
 
         const updatedLists = [...oldBoard.lists, newList];

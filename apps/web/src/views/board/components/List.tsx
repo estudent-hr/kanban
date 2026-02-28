@@ -29,6 +29,8 @@ interface List {
   name: string;
   createdBy?: string | null;
   minimumRole?: string;
+  emailAssigneesOnMove?: boolean;
+  emailLeadersOnMove?: boolean;
 }
 
 interface FormValues {
@@ -88,6 +90,20 @@ export default function List({
     updateList.mutate({
       listPublicId: list.publicId,
       minimumRole: newRole,
+    });
+  };
+
+  const handleEmailAssigneesToggle = () => {
+    updateList.mutate({
+      listPublicId: list.publicId,
+      emailAssigneesOnMove: !list.emailAssigneesOnMove,
+    });
+  };
+
+  const handleEmailLeadersToggle = () => {
+    updateList.mutate({
+      listPublicId: list.publicId,
+      emailLeadersOnMove: !list.emailLeadersOnMove,
     });
   };
 
@@ -178,23 +194,43 @@ export default function List({
             </div>
           </div>
           {canSetMinimumRole && (
-            <div className="mb-2 flex items-center px-4">
-              <label className="mr-2 text-[10px] text-light-900 dark:text-dark-800">
-                {t`Min role`}:
+            <div className="mb-2 flex flex-col gap-1 px-4">
+              <div className="flex items-center">
+                <label className="mr-2 text-[10px] text-light-900 dark:text-dark-800">
+                  {t`Min role`}:
+                </label>
+                <select
+                  value={list.minimumRole ?? "member"}
+                  onChange={(e) =>
+                    handleMinimumRoleChange(
+                      e.target.value as "leader" | "member" | "guest",
+                    )
+                  }
+                  className="h-5 rounded border border-light-500 bg-transparent px-1 py-0 text-[10px] text-light-900 focus:outline-none focus:ring-0 dark:border-dark-500 dark:text-dark-800"
+                >
+                  <option value="leader">{t`Leader`}</option>
+                  <option value="member">{t`Member`}</option>
+                  <option value="guest">{t`Guest`}</option>
+                </select>
+              </div>
+              <label className="flex cursor-pointer items-center gap-1.5 text-[10px] text-light-900 dark:text-dark-800">
+                <input
+                  type="checkbox"
+                  checked={list.emailAssigneesOnMove ?? false}
+                  onChange={handleEmailAssigneesToggle}
+                  className="h-3 w-3 rounded border-light-500 dark:border-dark-500"
+                />
+                {t`Email assignees on card move`}
               </label>
-              <select
-                value={list.minimumRole ?? "member"}
-                onChange={(e) =>
-                  handleMinimumRoleChange(
-                    e.target.value as "leader" | "member" | "guest",
-                  )
-                }
-                className="h-5 rounded border border-light-500 bg-transparent px-1 py-0 text-[10px] text-light-900 focus:outline-none focus:ring-0 dark:border-dark-500 dark:text-dark-800"
-              >
-                <option value="leader">{t`Leader`}</option>
-                <option value="member">{t`Member`}</option>
-                <option value="guest">{t`Guest`}</option>
-              </select>
+              <label className="flex cursor-pointer items-center gap-1.5 text-[10px] text-light-900 dark:text-dark-800">
+                <input
+                  type="checkbox"
+                  checked={list.emailLeadersOnMove ?? false}
+                  onChange={handleEmailLeadersToggle}
+                  className="h-3 w-3 rounded border-light-500 dark:border-dark-500"
+                />
+                {t`Email leaders on card move`}
+              </label>
             </div>
           )}
           {children}

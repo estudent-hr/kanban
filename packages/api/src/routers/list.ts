@@ -5,6 +5,8 @@ import * as boardRepo from "@kan/db/repository/board.repo";
 import * as cardRepo from "@kan/db/repository/card.repo";
 import * as activityRepo from "@kan/db/repository/cardActivity.repo";
 import * as listRepo from "@kan/db/repository/list.repo";
+import * as permissionRepo from "@kan/db/repository/permission.repo";
+import type { Role } from "@kan/shared";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { assertCanDelete, assertCanEdit, assertPermission } from "../utils/permissions";
@@ -162,6 +164,8 @@ export const listRouter = createTRPCRouter({
         name: z.string().min(1).optional(),
         index: z.number().optional(),
         minimumRole: z.enum(["leader", "member", "guest"]).optional(),
+        emailAssigneesOnMove: z.boolean().optional(),
+        emailLeadersOnMove: z.boolean().optional(),
       }),
     )
     .output(
@@ -208,6 +212,32 @@ export const listRouter = createTRPCRouter({
         );
       }
 
+      if (input.emailAssigneesOnMove !== undefined || input.emailLeadersOnMove !== undefined) {
+        const member = await permissionRepo.getMemberWithRole(
+          ctx.db,
+          userId,
+          list.workspaceId,
+        );
+        const memberRole = member?.role as Role | undefined;
+        const isAllowed = ctx.user?.isAdmin || memberRole === "admin" || memberRole === "leader";
+
+        if (!isAllowed) {
+          throw new TRPCError({
+            message: "Only leaders and admins can change email notification settings",
+            code: "FORBIDDEN",
+          });
+        }
+
+        await listRepo.updateEmailNotificationSettings(
+          ctx.db,
+          input.listPublicId,
+          {
+            emailAssigneesOnMove: input.emailAssigneesOnMove,
+            emailLeadersOnMove: input.emailLeadersOnMove,
+          },
+        );
+      }
+
       if (input.name) {
         result = await listRepo.update(
           ctx.db,
@@ -223,8 +253,8 @@ export const listRouter = createTRPCRouter({
         });
       }
 
-      if (!result && input.minimumRole) {
-        // If only minimumRole was updated, fetch the list to return
+      if (!result && (input.minimumRole || input.emailAssigneesOnMove !== undefined || input.emailLeadersOnMove !== undefined)) {
+        // If only settings were updated (no name/index change), return list info
         const updatedList = await listRepo.getByPublicId(ctx.db, input.listPublicId);
         if (updatedList) {
           result = { name: list.name, publicId: input.listPublicId };

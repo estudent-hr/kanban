@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   bigint,
   bigserial,
+  boolean,
   integer,
   pgTable,
   timestamp,
@@ -34,6 +35,8 @@ export const lists = pgTable("list", {
     .references(() => boards.id, { onDelete: "cascade" }),
   importId: bigint("importId", { mode: "number" }).references(() => imports.id),
   minimumRole: memberRoleEnum("minimumRole").notNull().default("member"),
+  emailAssigneesOnMove: boolean("emailAssigneesOnMove").notNull().default(false),
+  emailLeadersOnMove: boolean("emailLeadersOnMove").notNull().default(false),
 }).enableRLS();
 
 export const listsRelations = relations(lists, ({ one, many }) => ({

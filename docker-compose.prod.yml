@@ -35,6 +35,14 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - BETTER_AUTH_TRUSTED_ORIGINS=${BETTER_AUTH_TRUSTED_ORIGINS}
       - BETTER_AUTH_ALLOWED_DOMAINS=${BETTER_AUTH_ALLOWED_DOMAINS}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURE=${SMTP_SECURE}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_REJECT_UNAUTHORIZED=${SMTP_REJECT_UNAUTHORIZED}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - CRON_SECRET=${CRON_SECRET}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -57,6 +65,16 @@ services:
     restart: unless-stopped
     networks:
       - kan-network
+  cron:
+    image: alpine:latest
+    command: >
+      sh -c "while true; do sleep 300;
+      wget -q -O- --header='Authorization: Bearer $$CRON_SECRET'
+      --post-data='' http://web:3000/api/cron/process-card-move-emails; done"
+    depends_on:
+      - web
+    environment:
+      - CRON_SECRET=${CRON_SECRET}
 
 networks:
   kan-network:

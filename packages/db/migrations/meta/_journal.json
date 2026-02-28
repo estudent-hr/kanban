@@ -204,6 +204,13 @@
       "when": 1771790400000,
       "tag": "20260222200000_AddPermissionSystemOverhaul",
       "breakpoints": false
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1772323200000,
+      "tag": "20260228200000_AddCardMoveEmailNotifications",
+      "breakpoints": false
     }
   ]
 }

@@ -242,6 +242,8 @@ export const getByPublicId = async (
           boardId: true,
           index: true,
           minimumRole: true,
+          emailAssigneesOnMove: true,
+          emailLeadersOnMove: true,
         },
         with: {
           cards: {
@@ -437,6 +439,8 @@ export const getBySlug = async (
           boardId: true,
           index: true,
           minimumRole: true,
+          emailAssigneesOnMove: true,
+          emailLeadersOnMove: true,
         },
         with: {
           cards: {

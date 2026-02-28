@@ -209,9 +209,12 @@ export const getById = async (db: dbClient, listId: number) => {
   return db.query.lists.findFirst({
     columns: {
       id: true,
+      name: true,
       boardId: true,
       index: true,
       minimumRole: true,
+      emailAssigneesOnMove: true,
+      emailLeadersOnMove: true,
     },
     where: eq(lists.id, listId),
   });
@@ -221,9 +224,12 @@ export const getByPublicId = async (db: dbClient, listPublicId: string) => {
   return db.query.lists.findFirst({
     columns: {
       id: true,
+      name: true,
       boardId: true,
       index: true,
       minimumRole: true,
+      emailAssigneesOnMove: true,
+      emailLeadersOnMove: true,
     },
     where: eq(lists.publicId, listPublicId),
   });
@@ -283,6 +289,34 @@ export const updateMinimumRole = async (
     .returning({
       publicId: lists.publicId,
       minimumRole: lists.minimumRole,
+    });
+
+  return result;
+};
+
+export const updateEmailNotificationSettings = async (
+  db: dbClient,
+  listPublicId: string,
+  settings: {
+    emailAssigneesOnMove?: boolean;
+    emailLeadersOnMove?: boolean;
+  },
+) => {
+  const [result] = await db
+    .update(lists)
+    .set({
+      ...(settings.emailAssigneesOnMove !== undefined && {
+        emailAssigneesOnMove: settings.emailAssigneesOnMove,
+      }),
+      ...(settings.emailLeadersOnMove !== undefined && {
+        emailLeadersOnMove: settings.emailLeadersOnMove,
+      }),
+    })
+    .where(and(eq(lists.publicId, listPublicId), isNull(lists.deletedAt)))
+    .returning({
+      publicId: lists.publicId,
+      emailAssigneesOnMove: lists.emailAssigneesOnMove,
+      emailLeadersOnMove: lists.emailLeadersOnMove,
     });
 
   return result;
